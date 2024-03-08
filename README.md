@@ -29,3 +29,6 @@
 |Логин|Пароль|Ссылка|
 |-|-|-|
 |admin|admin|http://localhost:8000/admin|
+
+## API документация
+http://localhost:8000/api/v1/schema/swagger-ui

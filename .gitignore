@@ -161,3 +161,4 @@ cython_debug/
 
 docker-compose.override.yml
 hunt_art/staticfiles
+hunt_art/media
