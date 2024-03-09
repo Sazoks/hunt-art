@@ -139,6 +139,10 @@ class ArtComment(models.Model):
         max_length=4096,
         verbose_name=_('Текст комментария'),
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Дата создания'),
+    )
 
     class Meta:
         verbose_name = _('Коментарий')

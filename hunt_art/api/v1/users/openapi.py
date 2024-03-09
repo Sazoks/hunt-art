@@ -8,6 +8,7 @@ from rest_framework_simplejwt.serializers import (
 
 from utils.drf_spectacular import (
     OpenAPIDetailSerializer,
+    OpenAPIDetailWithCodeSerializer,
     OpenAPIBadRequestSerializerFactory,
 )
 
@@ -26,7 +27,7 @@ users_openapi = {
             status.HTTP_201_CREATED: serializers.CreateUserSerializer,
             status.HTTP_400_BAD_REQUEST: OpenAPIBadRequestSerializerFactory.create(
                 name='BadRequestCreateUserSerializer',
-                field_names=('username', 'password'),
+                fields=('username', 'password'),
             ),
         },
     ),
@@ -65,6 +66,16 @@ users_openapi = {
         request=serializers.UpdateUserSerializer,
         responses={
             status.HTTP_200_OK: serializers.UpdateUserSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenAPIBadRequestSerializerFactory.create(
+                name='BadRequestUpdateUserSerializer',
+                fields=(
+                    'username',
+                    ('profile', OpenAPIBadRequestSerializerFactory.create(
+                        name='BadRequestUpdateProfileSerializer',
+                        fields=('description', 'avatar', 'wallpaper'),
+                    )),
+                ),
+            ),
             status.HTTP_401_UNAUTHORIZED: OpenAPIDetailSerializer,
         },
     ),
@@ -76,6 +87,8 @@ users_openapi = {
         request=None,
         responses={
             status.HTTP_200_OK: None,
+            status.HTTP_403_FORBIDDEN: OpenAPIDetailSerializer,
+            status.HTTP_404_NOT_FOUND: OpenAPIDetailSerializer,
         },
     ),
     'unsubscribe_from_user': extend_schema(
@@ -86,6 +99,8 @@ users_openapi = {
         request=None,
         responses={
             status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_403_FORBIDDEN: OpenAPIDetailSerializer,
+            status.HTTP_404_NOT_FOUND: OpenAPIDetailSerializer,
         },
     ),
     'remove_from_subscribers': extend_schema(
@@ -96,6 +111,8 @@ users_openapi = {
         request=None,
         responses={
             status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_403_FORBIDDEN: OpenAPIDetailSerializer,
+            status.HTTP_404_NOT_FOUND: OpenAPIDetailSerializer,
         },
     ),
 }
@@ -110,6 +127,11 @@ auth_openapi = {
         request=TokenObtainPairSerializer,
         responses={
             status.HTTP_200_OK: TokenObtainPairSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenAPIBadRequestSerializerFactory.create(
+                name='BadRequestTokenSerializer',
+                fields=('username', 'password'),
+            ),
+            status.HTTP_401_UNAUTHORIZED: OpenAPIDetailSerializer,
         },
     ),
     'token_refresh': extend_schema(
@@ -120,6 +142,11 @@ auth_openapi = {
         request=TokenRefreshSerializer,
         responses={
             status.HTTP_200_OK: TokenRefreshSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenAPIBadRequestSerializerFactory.create(
+                name='BadRequestTokenRefreshSerializer',
+                fields=('refresh', ),
+            ),
+            status.HTTP_401_UNAUTHORIZED: OpenAPIDetailWithCodeSerializer,
         },
     ),
 }

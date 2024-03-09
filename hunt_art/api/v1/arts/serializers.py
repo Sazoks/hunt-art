@@ -47,6 +47,7 @@ class ShortRetrieveArtSerializer(serializers.ModelSerializer):
         model = models.Art
         fields = (
             'id',
+            'author',
             'image',
             'count_likes',
             'created_at',
@@ -89,3 +90,30 @@ class CreateArtSerializer(serializers.ModelSerializer):
     def create(self, validated_data: dict[str, Any]) -> models.Art:
         validated_data['author'] = self.context['request'].user
         return models.Art.objects.create(**validated_data)
+
+
+class ArtCommentSerializer(serializers.ModelSerializer):
+    user = ShortRetrieveUserSerializer(read_only=True)
+
+    class Meta:
+        model = models.ArtComment
+        fields = (
+            'id',
+            'user',
+            'art',
+            'text',
+            'created_at',
+        )
+        extra_kwargs = {
+            'art': {'read_only': True},
+        }
+
+    def create(self, validated_data: dict[str, Any]) -> models.ArtComment:
+        user = self.context['request'].user
+        art_id = self.context['view'].kwargs['art_pk']
+
+        return models.ArtComment.objects.create(
+            user_id=user.pk,
+            art_id=art_id,
+            **validated_data,
+        )

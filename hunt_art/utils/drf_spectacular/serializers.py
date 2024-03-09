@@ -4,17 +4,18 @@ from drf_spectacular.utils import inline_serializer
 
 
 class OpenAPIDetailSerializer(serializers.Serializer):
-    """Сериализатор для сообщения с детялми ошибки"""
-
     detail = serializers.CharField()
 
 
-class OpenAPIBadRequestSerializerFactory:
-    """Фабрика сериализаторов для 400 ответа на основе набора полей"""
+class OpenAPIDetailWithCodeSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+    code = serializers.CharField()
 
+
+class OpenAPIBadRequestSerializerFactory:
     @classmethod
     def create(
-        cls, name: str, field_names: Iterable[str], **kwargs
+        cls, name: str, fields: Iterable[str | tuple[str, serializers.Serializer]], **kwargs
     ) -> serializers.Serializer:
         """
         Создание класса сериализатора.
@@ -23,14 +24,18 @@ class OpenAPIBadRequestSerializerFactory:
         :param field_names: Коллекция имен полей для сериализатора.
         """
 
-        return inline_serializer(
-            name=name,
-            fields={
-                field_name: serializers.ListField(
+        fields_: dict[str, serializers.Field] = {}
+        for field in fields:
+            if isinstance(field, str):
+                fields_[field] = serializers.ListField(
                     child=serializers.CharField(),
                     initial=["string"],
                 )
-                for field_name in field_names
-            },
+            elif isinstance(field, tuple):
+                fields_[field[0]] = field[1]
+
+        return inline_serializer(
+            name=name,
+            fields=fields_,
             **kwargs,
         )

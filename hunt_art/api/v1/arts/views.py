@@ -39,8 +39,12 @@ from .serializers import (
     CreateArtSerializer,
     ShortRetrieveArtSerializer,
     ShortRetrieveArtForAuthorizedUserSerializer,
+    ArtCommentSerializer,
 )
-from .paginations import ArtPagination
+from .paginations import (
+    ArtPagination,
+    ArtCommentsPagination,
+)
 from .permissions import IsArtOwner
 
 
@@ -52,7 +56,6 @@ class ArtViewSet(
 ):
     pagination_class = ArtPagination
     permissions_map: dict[str, Collection[BasePermission]] = {
-        'default': (),
         'create': (IsAuthenticated(), ),
         'retrieve': (),
         'destroy': (IsArtOwner(), ),
@@ -64,10 +67,7 @@ class ArtViewSet(
     }
 
     def get_permissions(self) -> Collection[BasePermission]:
-        return self.permissions_map.get(
-            self.action,
-            self.permissions_map['default'],
-        )
+        return self.permissions_map.get(self.action, ())
 
     def get_serializer_class(self) -> Type[Serializer] | None:
         match self.action:
@@ -200,3 +200,35 @@ class ArtViewSet(
     #     likes = [ArtLike(user_id=i, art_id=1) for i in range(2, 1002)]
     #     ArtLike.objects.bulk_create(likes)
     #     return Response(status=200)
+
+
+class ArtCommentsViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    GenericViewSet,
+):
+    pagination_class = ArtCommentsPagination
+    serializer_class = ArtCommentSerializer
+    permissions_map: dict[str, Collection[BasePermission]] = {
+        'create': (IsAuthenticated(), ),
+        'list': (),
+    }
+
+    def get_permissions(self) -> Collection[BasePermission]:
+        return self.permissions_map.get(self.action, ())
+
+    def get_queryset(self) -> QuerySet[ArtComment]:
+        return ArtComment.objects.filter(art_id=self.kwargs['art_pk']).order_by('created_at')
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        self._check_art_exists()
+        return super().create(request, *args, **kwargs)
+    
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        self._check_art_exists()
+        return super().list(request, *args, **kwargs)
+
+    def _check_art_exists(self) -> None:
+        art_pk = self.kwargs['art_pk']
+        if not Art.objects.filter(pk=art_pk).exists():
+            raise exceptions.NotFound(f'Арта с id={art_pk} не существует.')
