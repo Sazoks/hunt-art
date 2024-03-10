@@ -11,6 +11,7 @@ from django.db.models import (
     Model,
 )
 from django.contrib.auth.models import AnonymousUser
+from django_filters import rest_framework as filters, utils
 
 from rest_framework import status
 from rest_framework import mixins
@@ -46,6 +47,7 @@ from .paginations import (
     ArtCommentsPagination,
 )
 from .permissions import IsArtOwner
+from .filters import ArtFilterSet
 
 
 class ArtViewSet(
@@ -65,6 +67,8 @@ class ArtViewSet(
         'like_art': (IsAuthenticated(), ),
         'dislike_art': (IsAuthenticated(), ),
     }
+    filter_backends = (filters.DjangoFilterBackend, )
+    filterset_class = ArtFilterSet
 
     def get_permissions(self) -> Collection[BasePermission]:
         return self.permissions_map.get(self.action, ())
@@ -91,7 +95,7 @@ class ArtViewSet(
                 queryset = queryset.select_related('author')
             case 'destory':
                 queryset = Art.objects.filter(author_id=self.request.user.pk)
-            case 'new_arts' | 'user_arts':
+            case 'new_arts':
                 queryset = (
                     queryset
                     .annotate(
@@ -126,6 +130,15 @@ class ArtViewSet(
                     )
                     .order_by(f'-{Art.AnnotatedFieldName.COUNT_LIKES}')
                 )
+            case 'user_arts':
+                queryset = (
+                    queryset
+                    .filter(author_id=self.kwargs['user_id'])
+                    .annotate(
+                        **{Art.AnnotatedFieldName.COUNT_LIKES: Count('likes')},
+                    )
+                    .order_by('-created_at')
+                )
 
         return queryset
 
@@ -144,23 +157,22 @@ class ArtViewSet(
     
     @action(methods=('get', ), detail=False, url_path='new')
     def new_arts(self, request: Request) -> Response:
-        return self._get_list_arts(self.get_queryset())
+        return self._get_list_arts(request)
     
     @action(methods=('get', ), detail=False, url_path='subscriptions')
     def subscriptions_arts(self, request: Request) -> Response:
-        return self._get_list_arts(self.get_queryset())
+        return self._get_list_arts(request)
     
     @action(methods=('get', ), detail=False, url_path='popular')
     def popular_arts(self, request: Request) -> Response:
-        return self._get_list_arts(self.get_queryset())
+        return self._get_list_arts(request)
     
     @action(methods=('get', ), detail=False, url_path='users/(?P<user_id>[^/.]+)')
     def user_arts(self, request: Request, user_id: Any) -> Response:
-        queryset = self.get_queryset().filter(author_id=user_id)
-        return self._get_list_arts(queryset)
+        return self._get_list_arts(request)
     
-    def _get_list_arts(self, queryset: QuerySet[Art]) -> Response:
-        queryset = self.filter_queryset(queryset)
+    def _get_list_arts(self, request: Request) -> Response:
+        queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -169,7 +181,7 @@ class ArtViewSet(
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
     @action(methods=('post', ), detail=True, url_path='like')
     def like_art(self, request: Request, *args, **kwargs) -> Response:
         art = self.get_object()
@@ -177,7 +189,7 @@ class ArtViewSet(
             raise exceptions.PermissionDenied(
                 f'Пользователь id={request.user.pk} уже лайкнул арт id={art.pk}'
             )
-        
+
         ArtLike.objects.create(user_id=request.user.pk, art_id=art.pk)
 
         return Response(status=status.HTTP_200_OK)

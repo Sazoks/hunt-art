@@ -21,6 +21,7 @@ drf-nested-routers = "^0.93.5"
 django = "^5.0.2"
 django-debug-toolbar = "^4.3.0"
 requests = "^2.31.0"
+django-filter = "^24.1"
 
 
 [build-system]
