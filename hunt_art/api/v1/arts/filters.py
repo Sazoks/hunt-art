@@ -17,6 +17,7 @@ class ArtFilterSet(filters.FilterSet):
         base_field=CharField(),
         lookup_expr='contains',
     )
+    author = filters.CharFilter(field_name='author__username')
 
     class Meta:
         model = Art

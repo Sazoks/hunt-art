@@ -48,6 +48,7 @@ from .paginations import (
 )
 from .permissions import IsArtOwner
 from .filters import ArtFilterSet
+from . import openapi
 
 
 class ArtViewSet(
@@ -89,12 +90,8 @@ class ArtViewSet(
                 return ShortRetrieveArtForAuthorizedUserSerializer
 
     def get_queryset(self) -> QuerySet[Art]:
-        queryset = Art.objects.all()
+        queryset = Art.objects.select_related('author')
         match self.action:
-            case 'retrieve':
-                queryset = queryset.select_related('author')
-            case 'destory':
-                queryset = Art.objects.filter(author_id=self.request.user.pk)
             case 'new_arts':
                 queryset = (
                     queryset
@@ -155,18 +152,34 @@ class ArtViewSet(
 
         return art
     
+    @openapi.arts_openapi.get('create')
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        return super().create(request, *args, **kwargs)
+    
+    @openapi.arts_openapi.get('retrieve')
+    def retrieve(self, request: Request, *args, **kwargs) -> Response:
+        return super().retrieve(request, *args, **kwargs)
+    
+    @openapi.arts_openapi.get('destroy')
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        return super().destroy(request, *args, **kwargs)
+    
+    @openapi.arts_openapi.get('new_arts')
     @action(methods=('get', ), detail=False, url_path='new')
     def new_arts(self, request: Request) -> Response:
         return self._get_list_arts(request)
     
+    @openapi.arts_openapi.get('subscriptions_arts')
     @action(methods=('get', ), detail=False, url_path='subscriptions')
     def subscriptions_arts(self, request: Request) -> Response:
         return self._get_list_arts(request)
     
+    @openapi.arts_openapi.get('popular_arts')
     @action(methods=('get', ), detail=False, url_path='popular')
     def popular_arts(self, request: Request) -> Response:
         return self._get_list_arts(request)
     
+    @openapi.arts_openapi.get('user_arts')
     @action(methods=('get', ), detail=False, url_path='users/(?P<user_id>[^/.]+)')
     def user_arts(self, request: Request, user_id: Any) -> Response:
         return self._get_list_arts(request)
@@ -182,6 +195,7 @@ class ArtViewSet(
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @openapi.arts_openapi.get('like_art')
     @action(methods=('post', ), detail=True, url_path='like')
     def like_art(self, request: Request, *args, **kwargs) -> Response:
         art = self.get_object()
@@ -194,6 +208,7 @@ class ArtViewSet(
 
         return Response(status=status.HTTP_200_OK)
     
+    @openapi.arts_openapi.get('dislike_art')
     @like_art.mapping.delete
     def dislike_art(self, request: Request, *args, **kwargs) -> Response:
         art = self.get_object()
@@ -232,10 +247,12 @@ class ArtCommentsViewSet(
     def get_queryset(self) -> QuerySet[ArtComment]:
         return ArtComment.objects.filter(art_id=self.kwargs['art_pk']).order_by('created_at')
 
+    @openapi.art_comments_openapi.get('create')
     def create(self, request: Request, *args, **kwargs) -> Response:
         self._check_art_exists()
         return super().create(request, *args, **kwargs)
     
+    @openapi.art_comments_openapi.get('list')
     def list(self, request: Request, *args, **kwargs) -> Response:
         self._check_art_exists()
         return super().list(request, *args, **kwargs)
