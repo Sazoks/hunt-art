@@ -7,6 +7,7 @@ from typing import (
 
 from django.db.models import QuerySet
 from django.contrib.auth.models import AnonymousUser
+from django_filters import rest_framework as filters
 
 from rest_framework import mixins
 from rest_framework import status
@@ -20,7 +21,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
-
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenObtainPairView,
@@ -33,24 +33,25 @@ from apps.users.services.subscriptions.exceptions import (
 )
 from apps.users.services.subscriptions import UserSubscriptionsService
 
-from drf_spectacular.utils import extend_schema_view
-
 from .serializers import (
     CreateUserSerializer,
     UpdateUserSerializer,
     RetrieveUserSerializer,
     RetrieveUserForAuthorizedUserSerializer,
+    ShortRetrieveUserSerializer,
 )
 from .openapi import users_openapi, auth_openapi
+from .pagination import UsersPagination
+from .filters import UsersFilterSet
 
 
 logger = logging.getLogger(__name__)
 
 
-# @extend_schema_view(**openapi.openapi_docs)
 class UserViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
+    mixins.ListModelMixin,
     GenericViewSet,
 ):
     """API для работы с пользователями и их профилями"""
@@ -59,7 +60,10 @@ class UserViewSet(
         'default': (IsAuthenticated(), ),
         'create': ((~IsAuthenticated)(), ),
         'retrieve': (),
+        'list': (),
     }
+    pagination_class = UsersPagination
+    filterset_class = UsersFilterSet
 
     def get_permissions(self) -> Collection[BasePermission]:
         return self.permissions_map.get(
@@ -79,6 +83,8 @@ class UserViewSet(
                 return RetrieveUserSerializer
             case 'update_current_user':
                 return UpdateUserSerializer
+            case 'list' | 'search_users':
+                return ShortRetrieveUserSerializer
 
     def get_queryset(self) -> QuerySet[User]:
         queryset = User.objects.all()
@@ -93,15 +99,29 @@ class UserViewSet(
                 queryset = queryset.select_related('profile')
 
         return queryset
-    
+
     @users_openapi.get('create')
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args, **kwargs) -> Response:
         return super().create(request, *args, **kwargs)
     
     @users_openapi.get('retrieve')
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request: Request, *args, **kwargs) -> Response:
         return super().retrieve(request, *args, **kwargs)
     
+    @users_openapi.get('list')
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        return super().list(request, *args, **kwargs)
+    
+    @users_openapi.get('search_users')
+    @action(
+        methods=('get', ),
+        detail=False,
+        url_path='search',
+        filter_backends=(filters.DjangoFilterBackend, ),
+    )
+    def search_users(self, request: Request, *args, **kwargs) -> Response:
+        return self.list(request, *args, **kwargs)
+
     @users_openapi.get('current_user')
     @action(methods=('get', ), detail=False, url_path='im')
     def current_user(self, request: Request) -> Response:

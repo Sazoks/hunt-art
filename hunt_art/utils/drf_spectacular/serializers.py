@@ -1,6 +1,21 @@
-from typing import Iterable
+from typing import Iterable, Type
 from rest_framework import serializers
 from drf_spectacular.utils import inline_serializer
+
+
+def get_pagination_schema(
+    name: str,
+    child_schema: Type[serializers.Serializer],
+) -> serializers.Serializer:
+    return inline_serializer(
+        name=name,
+        fields={
+            'count': serializers.IntegerField(),
+            'next': serializers.URLField(),
+            'previous': serializers.URLField(),
+            'results': child_schema(many=True),
+        },
+    )
 
 
 class OpenAPIDetailSerializer(serializers.Serializer):

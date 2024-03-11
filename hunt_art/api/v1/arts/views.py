@@ -11,7 +11,7 @@ from django.db.models import (
     Model,
 )
 from django.contrib.auth.models import AnonymousUser
-from django_filters import rest_framework as filters, utils
+from django_filters import rest_framework as filters
 
 from rest_framework import status
 from rest_framework import mixins
@@ -42,7 +42,7 @@ from .serializers import (
     ShortRetrieveArtForAuthorizedUserSerializer,
     ArtCommentSerializer,
 )
-from .paginations import (
+from .pagination import (
     ArtPagination,
     ArtCommentsPagination,
 )

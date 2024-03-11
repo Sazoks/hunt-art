@@ -2,9 +2,11 @@ version: '3.9'
 
 volumes:
   postgres_data:
+  redis_data:
 
 services:
   postgres:
+    restart: unless-stopped
     image: postgres:14-alpine
     environment:
       - POSTGRES_USER=${DB_USER}
@@ -15,11 +17,22 @@ services:
     expose:
       - ${DB_PORT}
 
+  redis:
+    restart: unless-stopped
+    image: redis:7.2.4-alpine
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/var/lib/redis/data
+    expose:
+     - ${REDIS_PORT}
+
   backend:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./Dockerfile
-    command: sh /app/wsgi-entrypoint.sh
+    command: sh /app/run-server.sh
     env_file:
       - .env
     depends_on:

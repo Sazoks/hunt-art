@@ -1,33 +1,15 @@
-from typing import Type
-
 from rest_framework import status
-from rest_framework import serializers as rest_serializers
-from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from django.utils.translation import gettext_lazy as _
 
 from utils.drf_spectacular import (
     OpenAPIDetailSerializer,
-    OpenAPIDetailWithCodeSerializer,
     OpenAPIBadRequestSerializerFactory,
+    get_pagination_schema,
 )
 
 from . import serializers
-
-
-def get_pagination_schema(
-    name: str,
-    child_schema: Type[rest_serializers.Serializer],
-) -> rest_serializers.Serializer:
-    return inline_serializer(
-        name=name,
-        fields={
-            'count': rest_serializers.IntegerField(),
-            'next': rest_serializers.URLField(),
-            'previous': rest_serializers.URLField(),
-            'results': child_schema(many=True),
-        },
-    )
 
 
 arts_list_query_params = [
@@ -37,7 +19,7 @@ arts_list_query_params = [
             'Выбор страницы с артами.<br><br>'
             'Принимает целое число (номер страницы) либо `last` значение для выбора последней страницы.<br><br>'
             'Нумерация страниц начинается с `1`.<br><br>'
-            'По умолчанию выбирает все арты.<br>'
+            'По умолчанию выбирает арты `первой` страницы.<br>'
         ),
         type=OpenApiTypes.STR,
         location='query',
@@ -46,7 +28,8 @@ arts_list_query_params = [
         name='page_size',
         description=_(
             'Указание размера страницы.<br><br>'
-            'По умолчанию значение равно `10` артов на страницу.<br>'
+            'По умолчанию значение равно `10` артов на страницу.<br><br>'
+            'Максимальный размер страницы: `40`.<br>'
         ),
         type=OpenApiTypes.INT,
         location='query',
@@ -257,9 +240,32 @@ art_comments_openapi = {
         summary=_("Получение списка комментариев указанного арта"),
         description=_(
             'Позволяет получить список комментариев указанного арта в порядке их создания: от старых к новым.<br><br>'
-            'Поддерживает пагинацию.<br><br>'
+            'Поддерживает пагинацию по следующим параметрам: `page`, `page_size`<br><br>'
 
         ),
+        parameters=[
+            OpenApiParameter(
+                name='page',
+                description=_(
+                    'Выбор страницы с комментариями.<br><br>'
+                    'Принимает целое число (номер страницы) либо `last` значение для выбора последней страницы.<br><br>'
+                    'Нумерация страниц начинается с `1`.<br><br>'
+                    'По умолчанию выбирает комментарии `первой` страницы.<br>'
+                ),
+                type=OpenApiTypes.STR,
+                location='query',
+            ),
+            OpenApiParameter(
+                name='page_size',
+                description=_(
+                    'Указание размера страницы.<br><br>'
+                    'По умолчанию значение равно `30` комментариев на страницу.<br><br>'
+                    'Максимальный размер страницы: `100`.<br>'
+                ),
+                type=OpenApiTypes.INT,
+                location='query',
+            ),
+        ],
         responses={
             status.HTTP_200_OK: serializers.ArtCommentSerializer,
             status.HTTP_404_NOT_FOUND: OpenAPIDetailSerializer,

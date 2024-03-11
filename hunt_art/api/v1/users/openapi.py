@@ -1,6 +1,7 @@
 from rest_framework import status
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework_simplejwt.serializers import (
     TokenObtainPairSerializer,
     TokenRefreshSerializer,
@@ -10,12 +11,83 @@ from utils.drf_spectacular import (
     OpenAPIDetailSerializer,
     OpenAPIDetailWithCodeSerializer,
     OpenAPIBadRequestSerializerFactory,
+    get_pagination_schema,
 )
 
 from . import serializers
 
 
+users_pagination_query_params = [
+    OpenApiParameter(
+        name='page',
+        type=OpenApiTypes.STR,
+        location='query',
+        description=_(
+            'Выбор страницы с пользователями.<br><br>'
+            'Принимает целое число (номер страницы) либо `last` значение для выбора последней страницы.<br><br>'
+            'Нумерация страниц начинается с `1`.<br><br>'
+            'По умолчанию выбирает пользователей `первой` страницы.<br>'
+        ),
+    ),
+    OpenApiParameter(
+        name='page_size',
+        description=_(
+            'Указание размера страницы.<br><br>'
+            'По умолчанию значение равно `30` пользователей на страницу.<br><br>'
+            'Максимальный размер страницы: `100`.<br>'
+        ),
+        type=OpenApiTypes.INT,
+        location='query',
+    ),
+]
+
+
 users_openapi = {
+    'list': extend_schema(
+        operation_id='list_users',
+        methods=('get', ),
+        summary=_('Список пользователей'),
+        description=_(
+            'Получение списка пользователей.<br><br>'
+            'Поддерживает пагинацию по следующим параметрам: `page`, `page_size`.<br><br>'
+        ),
+        parameters=users_pagination_query_params,
+        auth=(),
+        request=None,
+        responses={
+            status.HTTP_404_NOT_FOUND: OpenAPIDetailSerializer,
+        },
+    ),
+    'search_users': extend_schema(
+        operation_id='search_users',
+        methods=('get', ),
+        summary=_('Поиск пользователей'),
+        description=_(
+            'Позволяет искать пользователей по `username`.<br><br>'
+            'Поддерживает пагинацию по следующим параметрам: `page`, `page_size`.<br><br>'
+            'Поддерживает поиск по следующим полям: `username`.<br><br>'
+            'Выборка будет отсортирована по "возрастанию" имен пользователей.<br><br>'
+            'Пример. Поиск идет по `svetla`. Тогда выборка может быть такой: `svetla`, `svetlana`, `svetlana_228`.<br>'
+        ),
+        parameters=[
+            *users_pagination_query_params,
+            OpenApiParameter(
+                name='username',
+                type=OpenApiTypes.STR,
+                location='query',
+                required=True,
+                description=_('Поиск пользователей по `username`. Ищет пользователей, чей `username` начинается с указанного значения.<br>')
+            ),
+        ],
+        request=None,
+        responses={
+            status.HTTP_200_OK: get_pagination_schema(
+                name='PaginationSearchUsersSerializer',
+                child_schema=serializers.ShortRetrieveUserSerializer,
+            ),
+            status.HTTP_404_NOT_FOUND: OpenAPIDetailSerializer,
+        }
+    ),
     'create': extend_schema(
         operation_id="create_user",
         methods=('post', ),

@@ -10,13 +10,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from typing import Any
 from decouple import (
     Csv,
     config,
 )
 from pathlib import Path
 from datetime import timedelta
-from dj_database_url import parse as db_url
+from dj_database_url import (
+    DBConfig,
+    parse as db_url_to_conf,
+)
 
 
 # Main settings.
@@ -33,6 +37,8 @@ DEBUG = config('DJANGO_DEBUG', cast=bool, default=True)
 ROOT_URLCONF = 'hunt_art.urls'
 
 WSGI_APPLICATION = 'hunt_art.wsgi.application'
+
+ASGI_APPLICATION = "hunt_art.asgi.application"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -109,7 +115,11 @@ INSTALLED_APPS = [
     # Internal apps.
     'apps.users',
     'apps.arts',
+    'apps.chat',
 ]
+
+if DEBUG:
+    INSTALLED_APPS.insert(0, 'daphne')
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # django-cors-headers.
@@ -142,12 +152,24 @@ TEMPLATES = [
 
 # Database settings.
 
+def _get_default_db_config() -> DBConfig:
+    db_dsn_template: str | None = config('DB_DSN', default=None)
+    
+    if db_dsn_template is None:
+        return db_url_to_conf(f'sqlite:///{BASE_DIR}/db.sqlite3')
+    
+    return db_url_to_conf(
+        db_dsn_template.format(
+            username=config('DB_USER'),
+            password=config('DB_PASSWORD'),
+            host=config('DB_HOST'),
+            port=config('DB_PORT'),
+            db_name=config('DB_NAME'),
+        )
+    )
+
 DATABASES = {
-    'default': config(
-        'DB_URL',
-        cast=db_url,
-        default=f'sqlite:///{BASE_DIR}/db.sqlite3',
-    ),
+    'default': _get_default_db_config(),
 }
 
 
@@ -201,11 +223,39 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-# Django REST Framework settings
+# Django REST Framework settings.
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+}
+
+# Django Channels Layers settings.
+
+def _get_default_channel_layers_config() -> dict[str, Any]:
+    redis_dsn: str | None = config('REDIS_DSN', default=None)
+
+    if redis_dsn is None:
+        return {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        }
+    
+    channel_layer_dsn = redis_dsn.format(
+        host=config('REDIS_HOST'),
+        username=config('REDIS_USER'),
+        password=config('REDIS_PASSWORD'),
+        db=config('REDIS_CHANNELS_LAYER_DB'),
+    )
+    
+    return {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [channel_layer_dsn],
+        },
+    }
+
+CHANNEL_LAYERS = {
+    "default": _get_default_channel_layers_config(),
 }

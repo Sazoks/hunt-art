@@ -22,7 +22,7 @@ WORKDIR /app
 # git добавляет символы \r, что вызывает проблемы при исполнении скриптов.
 # bash-скрипты могут не работать из-за символов '\r'. Удаляем их, записываем результат
 # в новый файл и затем обратно переименовываем файл в исходное название.
-RUN cat wsgi-entrypoint.sh | tr -d '\r' >> wsgi-entrypoint_tmp.sh
-RUN rm wsgi-entrypoint.sh
-RUN mv wsgi-entrypoint_tmp.sh wsgi-entrypoint.sh
-RUN chmod 755 wsgi-entrypoint.sh
+RUN cat run-server.sh | tr -d '\r' >> run-server_tmp.sh
+RUN rm run-server.sh
+RUN mv run-server_tmp.sh run-server.sh
+RUN chmod 755 run-server.sh
