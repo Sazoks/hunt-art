@@ -59,6 +59,12 @@ CORS_ALLOWED_ORIGINS = config(
     default='http://localhost:8000',
 )
 
+CORS_ALLOW_CREDENTIALS = config(
+    'DJANGO_CORS_ALLOW_CREDENTIALS',
+    cast=bool,
+    default=False,
+)
+
 
 # Internationalization settings.
 
