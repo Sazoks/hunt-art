@@ -140,7 +140,7 @@ users_openapi = {
             status.HTTP_200_OK: serializers.UpdateUserSerializer,
             status.HTTP_400_BAD_REQUEST: OpenAPIBadRequestSerializerFactory.create(
                 name='BadRequestUpdateUserSerializer',
-                fields=('username', 'description', 'message'),
+                fields=('username', 'description', 'avatar', 'wallpaper', 'message'),
             ),
             status.HTTP_401_UNAUTHORIZED: OpenAPIDetailSerializer,
         },
