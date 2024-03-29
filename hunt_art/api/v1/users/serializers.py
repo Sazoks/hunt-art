@@ -1,5 +1,6 @@
 from typing import Any, Type
 
+from rest_framework import exceptions
 from rest_framework import serializers
 from rest_framework.request import Request
 
@@ -114,27 +115,44 @@ class RetrieveUserForAuthorizedUserSerializer(RetrieveUserSerializer):
         return result
 
 
-class UpdateUserSerializer(serializers.ModelSerializer):
+class UpdateUserSerializer(serializers.Serializer):
     """Сериализатор при обновлении данных пользователя"""
 
-    class _UpdateUserProfileSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = UserProfile
-            fields = '__all__'
-            extra_kwargs = {'user': {'read_only': True}}
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+    avatar = serializers.ImageField(required=False)
+    wallpaper = serializers.ImageField(required=False)
 
-    profile = _UpdateUserProfileSerializer()
+    _user_fields = ('username', )
+    _profile_fields = ('description', 'avatar', 'wallpaper')
 
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'profile')
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        if len(attrs) == 0:
+            raise exceptions.ValidationError(
+                detail={'message': 'Хотя бы одно поле должно быть заполнено.'},
+            )
+
+        return super().validate(attrs)
 
     def update(self, instance: User, validated_data: dict[str, Any]) -> User:
-        profile_data: dict[str, Any] | None = validated_data.pop('profile', None)
-        if len(validated_data) > 0:
-            instance: User = super().update(instance, validated_data)
+        user_data = {
+            field_name: validated_data[field_name]
+            for field_name in self._user_fields
+            if validated_data.get(field_name)
+        }
+        profile_data = {
+            field_name: validated_data[field_name]
+            for field_name in self._profile_fields
+            if validated_data.get(field_name)
+        }
 
-        if profile_data is not None:
+        if len(user_data) > 0:
+            for field_name, field_value in user_data.items():
+                setattr(instance, field_name, field_value)
+            instance.save()
+
+        if len(profile_data) > 0:
             for field_name, field_value in profile_data.items():
                 setattr(instance.profile, field_name, field_value)
             instance.profile.save()

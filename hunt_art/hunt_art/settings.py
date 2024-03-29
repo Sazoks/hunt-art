@@ -223,7 +223,7 @@ SPECTACULAR_SETTINGS = {
         'persistAuthorization': True,
         'filter': True,
     },
-    # 'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_SPLIT_REQUEST': True,
     # 'SERVE_PERMISSIONS': ('utils.permissions.IsSuperUser',),
     # 'SERVE_AUTHENTICATION': ('rest_framework.authentication.SessionAuthentication',),
 }
