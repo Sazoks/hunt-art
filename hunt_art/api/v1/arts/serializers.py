@@ -37,7 +37,10 @@ class RetrieveArtForAuthorizedUserSerializer(RetrieveArtSerializer):
     
     def get_liked_authorized_user(self, obj: models.Art) -> bool:
         authorized_user = self.context['request'].user
-        return obj.likes.through.objects.filter(user_id=authorized_user.pk).exists()
+        return obj.likes.through.objects.filter(
+            user_id=authorized_user.pk,
+            art_id=obj.pk,
+        ).exists()
 
 
 class ShortRetrieveArtSerializer(serializers.ModelSerializer):

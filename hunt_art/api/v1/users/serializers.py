@@ -120,7 +120,7 @@ class UpdateUserSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(read_only=True)
     username = serializers.CharField(required=False)
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, write_only=True)
     avatar = serializers.ImageField(required=False, write_only=True)
     wallpaper = serializers.ImageField(required=False, write_only=True)
 
