@@ -3,6 +3,7 @@ from typing import (
     Type,
     Collection,
 )
+import contextlib
 
 from django.db.models import (
     QuerySet,
@@ -67,6 +68,7 @@ class ArtViewSet(
         'popular_arts': (),
         'like_art': (IsAuthenticated(), ),
         'dislike_art': (IsAuthenticated(), ),
+        'user_arts': (),
     }
     filter_backends = (filters.DjangoFilterBackend, )
     filterset_class = ArtFilterSet
@@ -151,6 +153,13 @@ class ArtViewSet(
             art.save()
 
         return art
+    
+    def perform_authentication(self, request: Request) -> None:
+        if self.action in ('retrieve', 'new_arts', 'popular_arts', 'user_arts'):
+            with contextlib.suppress(exceptions.AuthenticationFailed):
+                return super().perform_authentication(request)
+        else:
+            return super().perform_authentication(request)
     
     @openapi.arts_openapi.get('create')
     def create(self, request: Request, *args, **kwargs) -> Response:
@@ -245,7 +254,14 @@ class ArtCommentsViewSet(
         return self.permissions_map.get(self.action, ())
 
     def get_queryset(self) -> QuerySet[ArtComment]:
-        return ArtComment.objects.filter(art_id=self.kwargs['art_pk']).order_by('created_at')
+        return ArtComment.objects.filter(art_id=self.kwargs['art_pk']).order_by('-created_at')
+    
+    def perform_authentication(self, request: Request) -> None:
+        if self.action in ('list', ):
+            with contextlib.suppress(exceptions.AuthenticationFailed):
+                return super().perform_authentication(request)
+        else:
+            return super().perform_authentication(request)
 
     @openapi.art_comments_openapi.get('create')
     def create(self, request: Request, *args, **kwargs) -> Response:

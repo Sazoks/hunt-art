@@ -1,5 +1,6 @@
 import logging
 import traceback
+import contextlib
 from typing import (
     Type,
     Collection,
@@ -11,6 +12,7 @@ from django_filters import rest_framework as filters
 
 from rest_framework import mixins
 from rest_framework import status
+from rest_framework import parsers
 from rest_framework import exceptions
 from rest_framework.permissions import (
     BasePermission,
@@ -58,7 +60,7 @@ class UserViewSet(
 
     permissions_map: dict[str, Collection[Type[BasePermission]]] = {
         'default': (IsAuthenticated(), ),
-        'create': ((~IsAuthenticated)(), ),
+        'create': (),
         'retrieve': (),
         'list': (),
     }
@@ -99,6 +101,18 @@ class UserViewSet(
                 queryset = queryset.select_related('profile')
 
         return queryset
+    
+    def perform_authentication(self, request: Request) -> None:
+        # Эти эндпоинты являются открытыми и в аутентификации не нуждаются.
+        # Может быть ситуация, когда клиент пытается сделать запрос к открытому API
+        # с протухшими токенами. Хоть API и открытые, все равно будет попытка произвести
+        # аутентификацию. И в этом случае будет ошибка 401. Хотя API открытое. Чтобы этого
+        # избежать, для этих эндпоинтов будем игнорировать ошибку аутентификации.
+        if self.action in ('create', 'retrieve', 'list'):
+            with contextlib.suppress(exceptions.AuthenticationFailed):
+                return super().perform_authentication(request)
+        else:
+            return super().perform_authentication(request)
 
     @users_openapi.get('create')
     def create(self, request: Request, *args, **kwargs) -> Response:
@@ -135,7 +149,7 @@ class UserViewSet(
             status=status.HTTP_200_OK,
             data=current_user_data,
         )
-    
+
     @users_openapi.get('update_current_user')
     @current_user.mapping.patch
     def update_current_user(self, request: Request) -> Response:

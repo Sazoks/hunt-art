@@ -67,7 +67,7 @@ users_openapi = {
             'Поддерживает пагинацию по следующим параметрам: `page`, `page_size`.<br><br>'
             'Поддерживает поиск по следующим полям: `username`.<br><br>'
             'Выборка будет отсортирована по "возрастанию" имен пользователей.<br><br>'
-            'Пример. Поиск идет по `svetla`. Тогда выборка может быть такой: `svetla`, `svetlana`, `svetlana_228`.<br>'
+            'Пример. Поиск идет по `svetla`. Тогда выборка может быть такой: `svetla`, `svetlan`, `svetlana`.<br>'
         ),
         parameters=[
             *users_pagination_query_params,
