@@ -92,7 +92,8 @@ class CreateArtSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data: dict[str, Any]) -> models.Art:
         validated_data['author'] = self.context['request'].user
-        return models.Art.objects.create(**validated_data)
+        art = models.Art.objects.create(**validated_data)
+        return art
 
 
 class ArtCommentSerializer(serializers.ModelSerializer):

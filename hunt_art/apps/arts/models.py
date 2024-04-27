@@ -57,7 +57,7 @@ class Art(models.Model):
     tags = pg_fields.ArrayField(
         base_field=models.CharField(max_length=100),
         blank=True,
-        null=True,
+        default=list,
         verbose_name=_('Тэги'),
     )
     created_at = models.DateTimeField(

@@ -25,16 +25,18 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.serializers import Serializer
+from rest_framework.parsers import MultiPartParser
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.utils.mediatypes import media_type_matches
 
 from apps.users.models import User
-
 from apps.arts.models import (
     Art,
     ArtLike,
     ArtComment,
 )
 
+from . import openapi
 from .serializers import (
     RetrieveArtSerializer,
     RetrieveArtForAuthorizedUserSerializer,
@@ -49,7 +51,6 @@ from .pagination import (
 )
 from .permissions import IsArtOwner
 from .filters import ArtFilterSet
-from . import openapi
 
 
 class ArtViewSet(
@@ -150,7 +151,7 @@ class ArtViewSet(
             art.__dict__[Art.AnnotatedFieldName.COUNT_LIKES] = count_likes
 
             art.views += 1
-            art.save()
+            art.save(update_fields=('views', ))
 
         return art
     
@@ -160,11 +161,31 @@ class ArtViewSet(
                 return super().perform_authentication(request)
         else:
             return super().perform_authentication(request)
-    
+
+    def post_parsing(self, request: Request) -> None:
+        match self.action:
+            # MultiPartParser не умеет правильно обрабатывать массивы, поэтому придется вручную делать это.
+            # FIXME: Это жоский костыль, который надо исправить в будущем. Сделать более общее и модульное решение.
+            case 'create' if media_type_matches(MultiPartParser.media_type, request.content_type):
+                # Конвертируем строку в массив строк.
+                incorrectly_parsed_tags: str = request.data.getlist('tags')[0]
+                tags: list[str] = incorrectly_parsed_tags.split(',')
+
+                # Удалим все пустые строки.
+                tags = list(filter(lambda item: item != '', tags))
+
+                request.data.setlist('tags', tags)
+
+    def initialize_request(self, request: Request, *args, **kwargs) -> Request:
+        request = super().initialize_request(request, *args, **kwargs)
+        self.post_parsing(request)
+
+        return request
+
     @openapi.arts_openapi.get('create')
     def create(self, request: Request, *args, **kwargs) -> Response:
         return super().create(request, *args, **kwargs)
-    
+
     @openapi.arts_openapi.get('retrieve')
     def retrieve(self, request: Request, *args, **kwargs) -> Response:
         return super().retrieve(request, *args, **kwargs)

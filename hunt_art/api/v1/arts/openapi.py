@@ -1,5 +1,5 @@
 from rest_framework import status
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRequest
 from drf_spectacular.types import OpenApiTypes
 from django.utils.translation import gettext_lazy as _
 
@@ -68,7 +68,10 @@ arts_openapi = {
         operation_id="create_art",
         methods=('post', ),
         summary=_("Создание арта"),
-        description=_("Позволяет создать арт."),
+        description=_(
+            "Позволяет создать арт.<br><br>"
+            "Поддерживает только `Content-Type: multipart/form-data`."
+        ),
         request=serializers.CreateArtSerializer,
         responses={
             status.HTTP_201_CREATED: serializers.CreateArtSerializer,
