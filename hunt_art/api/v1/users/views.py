@@ -236,13 +236,13 @@ class UserViewSet(
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # # TODO: Убрать.
-    # @action(methods=('post', ), detail=False, url_path='generate-users')
-    # def generate(self, request: Request) -> Response:
-    #     count = 1000
-    #     users = [User(username=f'username_{i}', password='1234567') for i in range(count)]
-    #     User.objects.bulk_create(users)
-    #     return Response(status=200)
+    # TODO: Убрать.
+    @action(methods=('post', ), detail=False, url_path='generate-users')
+    def generate(self, request: Request) -> Response:
+        count = 1000
+        users = [User(username=f'username_{i}', password='1234567') for i in range(count)]
+        User.objects.bulk_create(users)
+        return Response(status=200)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

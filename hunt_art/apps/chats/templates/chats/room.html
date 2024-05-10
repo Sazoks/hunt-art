@@ -7,22 +7,20 @@
 <body>
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-message-submit" type="button" value="Send">
+    <input id="chat-message-submit" type="button" value="Send"><br>
+    <input type="text" name="user_id" id="user_id">
+    <input type="text" name="jwt_access" id="jwt_access">
     {{ room_name|json_script:"room-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
         const chatSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/chat/'
-            + roomName
-            + '/'
+            'ws://' + window.location.host + '/ws/'
         );
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message + '\n');
+            document.querySelector('#chat-log').value += (data.data.message_text + '\n');
         };
 
         chatSocket.onclose = function(e) {
@@ -31,7 +29,7 @@
 
         document.querySelector('#chat-message-input').focus();
         document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
+            if (e.key === 'Enter') {
                 document.querySelector('#chat-message-submit').click();
             }
         };
@@ -40,10 +38,24 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
-                'message': message
+                'subsystem': 'chat',
+                'action': 'receive_message',
+                'headers': {
+                    "jwt_access": document.getElementById("jwt_access").value,
+                },
+                'data': {
+                    'user_id': Number(document.getElementById("user_id").value),
+                    'message_text': message,
+                },
             }));
+
             messageInputDom.value = '';
         };
     </script>
 </body>
 </html>
+
+<!-- 
+    admin: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1MjcxMDczLCJpYXQiOjE3MTUyNTMwNzMsImp0aSI6ImFjNjk5NzgwNGJkMjQ3OWU4NWJiMzQ0MmJjYzZlNjRiIiwidXNlcl9pZCI6MX0.GwUyNeCEuABaJjnhdTf0YSa6hrb7yc8Eb28Wwr_3fTY
+    username_0: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1MjcxMDQzLCJpYXQiOjE3MTUyNTMwNDMsImp0aSI6IjliZmFiZmRiYTVlNDQ1Zjc5MzFjNGMxNjg0ZTk0YzhjIiwidXNlcl9pZCI6Mn0.CAuepW5lcKdU0nfAgCE-ft7QD-mo487A0kwpp1BhZkw
+ -->

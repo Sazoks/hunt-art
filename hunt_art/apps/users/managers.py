@@ -39,6 +39,9 @@ class UserManager(DefaultUserManager):
     
     def _create_profile_for(self, user: 'models.User') -> 'models.UserProfile':
         return models.UserProfile.objects.create(user=user)
+    
+    def _create_websocket_data_for(self, user: 'models.User') -> 'models.UserProfile':
+        return models.WebsocketData.objects.create(user=user)
 
     def create_user(
         self,

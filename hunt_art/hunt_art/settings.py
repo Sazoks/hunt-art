@@ -44,6 +44,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
+DJANGO_ALLOW_ASYNC_UNSAFE = True
+
 
 # Network settings.
 
@@ -121,7 +123,8 @@ INSTALLED_APPS = [
     # Internal apps.
     'apps.users',
     'apps.arts',
-    'apps.chat',
+    'apps.websockets',
+    'apps.chats',
 ]
 
 if DEBUG:
@@ -201,7 +204,7 @@ if not DEBUG:
 # JWT Auth settings.
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "UPDATE_LAST_LOGIN": True,
 }

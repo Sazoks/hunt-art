@@ -26,4 +26,5 @@ urlpatterns = [
     # API приложений.
     path('users/', include('api.v1.users.urls')),
     path('arts/', include('api.v1.arts.urls')),
+    path("chats/", include("api.v1.chats.urls")),
 ]
