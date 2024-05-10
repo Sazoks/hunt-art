@@ -97,7 +97,7 @@ class UserViewSet(
                     .select_related('profile')
                     .prefetch_related('followers', 'subscriptions')
                 )
-            case 'update_current_user':
+            case 'update_current_user' | 'search_users':
                 queryset = queryset.select_related('profile')
 
         return queryset

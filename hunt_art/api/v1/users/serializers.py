@@ -31,9 +31,18 @@ class CreateUserSerializer(serializers.ModelSerializer):
 class ShortRetrieveUserSerializer(serializers.ModelSerializer):
     """Сериализатор с короткой информацией о пользователе"""
 
+    avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('id', 'username')
+        fields = ('id', 'username', 'avatar')
+
+    def get_avatar(self, obj: User) -> str | None:
+        request = self.context['request']
+        avatar_url = obj.profile.avatar.url
+        if not avatar_url:
+            return
+        return request.build_absolute_uri(avatar_url)
 
 
 class RetrieveUserSerializer(serializers.ModelSerializer):

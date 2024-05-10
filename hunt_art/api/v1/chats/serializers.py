@@ -45,7 +45,7 @@ class ShortChatSerializer(serializers.ModelSerializer):
         else:
             return str(obj.group_chat_data.name) or None
 
-    def get_avatar(self, obj: Chat) -> str:
+    def get_avatar(self, obj: Chat) -> str | None:
         """
         Получение аватарки чата.
 
@@ -61,7 +61,10 @@ class ShortChatSerializer(serializers.ModelSerializer):
                 for user in obj.users.all()
                 if user.pk != current_user.pk
             ][0]
-            return str(other_user.profile.avatar) or None
+            avatar_url = other_user.profile.avatar.url
+            if not avatar_url:
+                return
+            return self.context["request"].build_absolute_uri(avatar_url)
         else:
             return str(obj.group_chat_data.avatar) or None
 
