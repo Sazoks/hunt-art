@@ -64,9 +64,9 @@ class ShortChatSerializer(serializers.ModelSerializer):
             avatar = str(other_user.profile.avatar)
             if not avatar:
                 return
-            return self.context["request"].build_absolute_uri(avatar.url)
+            return self.context["request"].build_absolute_uri(other_user.profile.avatar.url)
         else:
-            return str(obj.group_chat_data.avatar) or None
+            return self.context["request"].build_absolute_uri(obj.group_chat_data.avatar.url) or None
 
     def get_chat_id(self, obj: Chat) -> int | None:
         if obj.chat_type == Chat.ChatType.GROUP:

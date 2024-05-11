@@ -19,8 +19,19 @@
         );
 
         chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.data.message_text + '\n');
+            const data = JSON.parse(e.data).data;
+            document.querySelector('#chat-log').value += (data.message_text + '\n');
+            chatSocket.send(JSON.stringify({
+                "subsystem": "chat",
+                "action": "read_message",
+                "headers": {
+                    "jwt_access": document.getElementById("jwt_access").value,
+                },
+                "data": {
+                    "user_id": Number(document.getElementById("user_id").value),
+                    "message_id": data.message_id,
+                },
+            }))
         };
 
         chatSocket.onclose = function(e) {
@@ -56,6 +67,6 @@
 </html>
 
 <!-- 
-    admin: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1MjcxMDczLCJpYXQiOjE3MTUyNTMwNzMsImp0aSI6ImFjNjk5NzgwNGJkMjQ3OWU4NWJiMzQ0MmJjYzZlNjRiIiwidXNlcl9pZCI6MX0.GwUyNeCEuABaJjnhdTf0YSa6hrb7yc8Eb28Wwr_3fTY
-    username_0: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1MjcxMDQzLCJpYXQiOjE3MTUyNTMwNDMsImp0aSI6IjliZmFiZmRiYTVlNDQ1Zjc5MzFjNGMxNjg0ZTk0YzhjIiwidXNlcl9pZCI6Mn0.CAuepW5lcKdU0nfAgCE-ft7QD-mo487A0kwpp1BhZkw
+    admin: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1NDMzMDYwLCJpYXQiOjE3MTU0MTUwNjAsImp0aSI6ImYwNzAzMDllZWE2ZTQxYzRhNTQ1NjAzNDE3MmIwNWI4IiwidXNlcl9pZCI6MX0.P6_4gVTLL3-sc4IU-kwst6mofkbtv4rdBVaiVooccak
+    username_0: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1NDMzMDg0LCJpYXQiOjE3MTU0MTUwODQsImp0aSI6IjU4OTJkYmQzMTlkNDQ1N2Q4NjgyNzc4YmE0Zjk4NTNiIiwidXNlcl9pZCI6Mn0.4emxuxMP8n9EPljk5sw_XsYyCz0kHht-bJLIZwVkkmc
  -->

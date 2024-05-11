@@ -23,6 +23,7 @@ from apps.chats.models import (
     ChatMember,
     ChatMessage,
 )
+from apps.users.models import User
 
 from .pagination import ChatPagination, ChatMessagePagination
 from .serializers import ShortChatSerializer, ChatMessageSerializer
@@ -59,9 +60,26 @@ class ChatsViewSet(
     def list(self, request: Request, *args, **kwargs) -> Response:
         return super().list(request, *args, **kwargs)
     
-    # @action(methods=("post", ), detail=True, url_path="read-all-messages")
-    # def read_all_messages(self, request: Request) -> Response:
-    #     chat = self.get_object()
+    @action(methods=("post", ), detail=True, url_path="read-all-messages")
+    def read_all_messages(self, request: Request, **kwargs) -> Response:
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        other_user = User.objects.filter(pk=self.kwargs[lookup_url_kwarg]).first()
+
+        chat = list(
+            self.request.user.chats
+            .filter(chat_type=Chat.ChatType.PERSONAL)
+            .intersection(
+                other_user.chats
+                .filter(chat_type=Chat.ChatType.PERSONAL)
+            )
+        )[0]
+
+        chat_member = ChatMember.objects.filter(chat=chat, user=request.user).first()
+        last_message = ChatMessage.objects.filter(chat=chat).order_by('-created_at').first()
+        chat_member.read_before = last_message.created_at
+        chat_member.save(update_fields=("read_before", ))
+
+        return Response(status=200)
     
 
 class ChatMessagesViewSet(

@@ -42,7 +42,7 @@ class ShortRetrieveUserSerializer(serializers.ModelSerializer):
         avatar = str(obj.profile.avatar)
         if not avatar:
             return
-        return request.build_absolute_uri(avatar.url)
+        return request.build_absolute_uri(obj.profile.avatar.url)
 
 
 class RetrieveUserSerializer(serializers.ModelSerializer):
