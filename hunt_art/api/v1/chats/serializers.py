@@ -7,6 +7,7 @@ from apps.chats.models import (
     ChatMember,
     ChatMessage,
 )
+from apps.users.models import User
 
 
 class ShortChatSerializer(serializers.ModelSerializer):
@@ -14,6 +15,7 @@ class ShortChatSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     # chat_id = serializers.SerializerMethodField()
     user_id = serializers.SerializerMethodField()
+    has_unread_messages = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
@@ -23,7 +25,13 @@ class ShortChatSerializer(serializers.ModelSerializer):
             "user_id",
             "name",
             "avatar",
+            "has_unread_messages",
         )
+
+    def get_has_unread_messages(self, obj: Chat) -> bool:
+        current_user: User = self.context['request'].user
+        chat_member = ChatMember.objects.filter(chat=obj, user=current_user).first()
+        return ChatMessage.objects.filter(chat=obj, created_at__gt=chat_member.read_before).exists()
 
     def get_name(self, obj: Chat) -> str:
         """
