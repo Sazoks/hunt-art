@@ -93,7 +93,17 @@ class ChatMessagesViewSet(
     }
 
     def get_queryset(self) -> QuerySet[ChatMessage]:
-        return ChatMessage.objects.filter(chat_id=self.kwargs["chat_pk"]).order_by('-created_at')
+        other_user = User.objects.filter(pk=self.kwargs["chat_pk"]).first()
+        chat = list(
+            self.request.user.chats
+            .filter(chat_type=Chat.ChatType.PERSONAL)
+            .intersection(
+                other_user.chats
+                .filter(chat_type=Chat.ChatType.PERSONAL)
+            )
+        )[0]
+
+        return ChatMessage.objects.filter(chat=chat).order_by('-created_at')
 
     @chat_messages_openapi.get("list")
     def list(self, request: Request, *args, **kwargs) -> Response:
