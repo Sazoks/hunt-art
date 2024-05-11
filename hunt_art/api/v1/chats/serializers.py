@@ -61,10 +61,10 @@ class ShortChatSerializer(serializers.ModelSerializer):
                 for user in obj.users.all()
                 if user.pk != current_user.pk
             ][0]
-            avatar_url = other_user.profile.avatar.url
-            if not avatar_url:
+            avatar = str(other_user.profile.avatar)
+            if not avatar:
                 return
-            return self.context["request"].build_absolute_uri(avatar_url)
+            return self.context["request"].build_absolute_uri(avatar.url)
         else:
             return str(obj.group_chat_data.avatar) or None
 

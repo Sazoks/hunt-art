@@ -59,6 +59,10 @@ class ChatsViewSet(
     def list(self, request: Request, *args, **kwargs) -> Response:
         return super().list(request, *args, **kwargs)
     
+    # @action(methods=("post", ), detail=True, url_path="read-all-messages")
+    # def read_all_messages(self, request: Request) -> Response:
+    #     chat = self.get_object()
+    
 
 class ChatMessagesViewSet(
     mixins.ListModelMixin,

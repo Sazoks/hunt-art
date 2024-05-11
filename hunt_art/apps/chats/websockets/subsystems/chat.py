@@ -61,3 +61,22 @@ class ChatWebSocketSubsystem(BaseWebSocketSubsystem):
 
     async def new_message(self, content: dict[str, Any]) -> None:
         await self.consumer.send_json(content)
+
+    # async def read_message(self, content: dict[str, Any]) -> None:
+    #     """
+    #     Прочтение сообщения юзером.
+
+    #     ```
+    #     content = {
+    #         "subsystem": "chat",
+    #         "action": "read_message",
+    #         "headers": {
+    #             "jwt_access": "alskdfj;lwken,zxcmv",
+    #         },
+    #         "data": {
+    #             "user_id": 5,
+    #             "message_id": 123,
+    #         },
+    #     }
+    #     ```
+    #     """

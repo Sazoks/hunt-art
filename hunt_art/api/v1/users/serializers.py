@@ -39,10 +39,10 @@ class ShortRetrieveUserSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj: User) -> str | None:
         request = self.context['request']
-        avatar_url = obj.profile.avatar.url
-        if not avatar_url:
+        avatar = str(obj.profile.avatar)
+        if not avatar:
             return
-        return request.build_absolute_uri(avatar_url)
+        return request.build_absolute_uri(avatar.url)
 
 
 class RetrieveUserSerializer(serializers.ModelSerializer):

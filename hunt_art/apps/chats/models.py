@@ -95,6 +95,11 @@ class ChatMember(models.Model):
         auto_now_add=True,
         verbose_name=_("Дата присоединения к чату"),
     )
+    read_before = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Дата и время, до куда пользователь дочитал историю чата"),
+    )
 
     class Meta:
         verbose_name = _("Участник чата")
