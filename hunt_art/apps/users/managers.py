@@ -7,7 +7,8 @@ from django.apps import apps
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import UserManager as DefaultUserManager
 
-import apps.users.models as models
+from apps.websockets.models import WebsocketData
+from apps.users import models
 
 
 class UserManager(DefaultUserManager):
@@ -41,7 +42,7 @@ class UserManager(DefaultUserManager):
         return models.UserProfile.objects.create(user=user)
     
     def _create_websocket_data_for(self, user: 'models.User') -> 'models.UserProfile':
-        return models.WebsocketData.objects.create(user=user)
+        return WebsocketData.objects.create(user=user)
 
     def create_user(
         self,

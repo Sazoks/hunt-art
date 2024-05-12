@@ -3,12 +3,9 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 
-UserModel = get_user_model()
-
-
 class WebsocketData(models.Model):
     user = models.OneToOneField(
-        to=UserModel,
+        to='users.User',
         on_delete=models.CASCADE,
         related_name="websocket_data",
         related_query_name="websocket_data",

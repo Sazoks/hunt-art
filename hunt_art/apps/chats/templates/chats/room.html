@@ -9,7 +9,8 @@
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send"><br>
     <input type="text" name="user_id" id="user_id">
-    <input type="text" name="jwt_access" id="jwt_access">
+    <input type="text" name="jwt_access" id="jwt_access"><br><br>
+    <input type="button" name="auth" id="auth_btn" value="Вход">
     {{ room_name|json_script:"room-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
@@ -62,11 +63,22 @@
 
             messageInputDom.value = '';
         };
+
+        document.getElementById("auth_btn").onclick = function(e) {
+            chatSocket.send(JSON.stringify({
+                "subsystem": "auth",
+                "action": "auth",
+                "headers": {
+                    "jwt_access": document.getElementById("jwt_access").value,
+                }
+            }))
+        }
     </script>
 </body>
 </html>
 
 <!-- 
-    admin: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1NDMzMDYwLCJpYXQiOjE3MTU0MTUwNjAsImp0aSI6ImYwNzAzMDllZWE2ZTQxYzRhNTQ1NjAzNDE3MmIwNWI4IiwidXNlcl9pZCI6MX0.P6_4gVTLL3-sc4IU-kwst6mofkbtv4rdBVaiVooccak
-    username_0: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1NDMzMDg0LCJpYXQiOjE3MTU0MTUwODQsImp0aSI6IjU4OTJkYmQzMTlkNDQ1N2Q4NjgyNzc4YmE0Zjk4NTNiIiwidXNlcl9pZCI6Mn0.4emxuxMP8n9EPljk5sw_XsYyCz0kHht-bJLIZwVkkmc
- -->
+    admin (1): eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1NTA2MzAwLCJpYXQiOjE3MTU0ODgzMDAsImp0aSI6IjE3ODEzZDMyZDczODRlOTNhNmJiNmZmM2EyMGZmNmUzIiwidXNlcl9pZCI6MX0.8qBxfT1PWo0-jZTEi_PuisaSepGbB_5lKcBxxpd0jB4
+    username_0 (2): eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1NTA2MzI4LCJpYXQiOjE3MTU0ODgzMjgsImp0aSI6ImE4OTRhZjYyNmQ3YzQwMTk5Y2Y1NTBjNzA0MGVlMzcxIiwidXNlcl9pZCI6Mn0.VvlZmHdxwtiFOfquOC5-o6sUnayuC8zsje4CeDIvCMU
+    username_1 (3): eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE1NTA2OTk0LCJpYXQiOjE3MTU0ODg5OTQsImp0aSI6IjUzMGY0NDVhOGFhNzQwNmFhODQyOTVhMDdkNTZkZWViIiwidXNlcl9pZCI6M30.b8G47AFGxodhkNV8fTO5RVkkZv1gIes3jvLITLCaXx0
+-->
