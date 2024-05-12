@@ -55,6 +55,7 @@ class UserManager(DefaultUserManager):
         extra_fields.setdefault("is_superuser", False)
 
         user = self._create_user(username, password, **extra_fields)
+        self._create_websocket_data_for(user)
         if with_profile:
             self._create_profile_for(user)
 
