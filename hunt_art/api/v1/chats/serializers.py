@@ -31,6 +31,8 @@ class ShortChatSerializer(serializers.ModelSerializer):
     def get_has_unread_messages(self, obj: Chat) -> bool:
         current_user: User = self.context['request'].user
         chat_member = ChatMember.objects.filter(chat=obj, user=current_user).first()
+        if chat_member.read_before is None:
+            return True
         return ChatMessage.objects.filter(chat=obj, created_at__gt=chat_member.read_before).exists()
 
     def get_name(self, obj: Chat) -> str:
