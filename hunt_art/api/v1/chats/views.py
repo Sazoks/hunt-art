@@ -65,6 +65,8 @@ class ChatsViewSet(
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         other_user = User.objects.filter(pk=self.kwargs[lookup_url_kwarg]).first()
 
+        print(f'Other user: {other_user.username}, pk: {other_user.pk}')
+
         chat = list(
             self.request.user.chats
             .filter(chat_type=Chat.ChatType.PERSONAL)
@@ -74,10 +76,18 @@ class ChatsViewSet(
             )
         )[0]
 
+        print(f'Chat pk: {chat.pk}')
+
         chat_member = ChatMember.objects.filter(chat=chat, user=request.user).first()
+        print(f'Member pk: {chat_member.pk}')
+
         last_message = ChatMessage.objects.filter(chat=chat).order_by('-created_at').first()
+        print(f'Message: (created_at) {last_message.created_at}, (pk) {last_message.pk}, (chat) {last_message.chat.pk}, (user) {last_message.user.pk}')
+
+        print(f'Read before (user: {chat_member.user.pk}, pk: {chat_member.pk}) {chat_member.read_before}')
         chat_member.read_before = last_message.created_at
         chat_member.save(update_fields=("read_before", ))
+        print(f'Read before (user: {chat_member.user.pk}, pk: {chat_member.pk}) {chat_member.read_before}')
 
         return Response(status=200)
     
