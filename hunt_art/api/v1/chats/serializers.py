@@ -36,7 +36,7 @@ class ShortChatSerializer(serializers.ModelSerializer):
         
         print('---------------------')
         print(f'Member: {chat_member.read_before}')
-        print(f'Message: {ChatMessage.objects.filter(chat=obj).order_by('-created_at').first().created_at}')
+        print(f'Message: {ChatMessage.objects.filter(chat=obj).order_by("-created_at").first().created_at}')
         print('=====================')
 
         return ChatMessage.objects.filter(chat=obj, created_at__gt=chat_member.read_before).exists()
