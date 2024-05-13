@@ -55,7 +55,7 @@ class ChatWebSocketSubsystem(BaseWebSocketSubsystem):
         if self.consumer.user is None:
             return
         
-        for chat in self.consumer.user.chats.all():
+        async for chat in self.consumer.user.chats.all():
             await self.consumer.channel_layer.group_discard(
                 f'chat_pk_{chat.pk}',
                 self.consumer.channel_name,
