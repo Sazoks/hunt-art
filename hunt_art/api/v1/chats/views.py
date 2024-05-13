@@ -86,7 +86,7 @@ class ChatsViewSet(
 
         print(f'Read before (user: {chat_member.user.pk}, pk: {chat_member.pk}) {chat_member.read_before}')
         chat_member.read_before = last_message.created_at
-        chat_member.save(update_fields=("read_before", ))
+        chat_member.save()
         print(f'Read before (user: {chat_member.user.pk}, pk: {chat_member.pk}) {chat_member.read_before}')
 
         return Response(status=200)
