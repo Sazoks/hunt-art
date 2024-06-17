@@ -63,6 +63,7 @@ class UserViewSet(
         'create': (),
         'retrieve': (),
         'list': (),
+        'search_users': (),
     }
     pagination_class = UsersPagination
     filterset_class = UsersFilterSet
