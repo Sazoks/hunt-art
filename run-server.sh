@@ -21,5 +21,5 @@ if [ $DJANGO_DEBUG = "True" ]
 then 
     poetry run python manage.py runserver 0.0.0.0:8000
 else
-    poetry run uvicorn hunt_art.asgi --host 0.0.0.0 --port 8000 --workers $WORKERS --threads $THREADS
+    poetry run uvicorn hunt_art.asgi --host 0.0.0.0 --port 8000 --workers $WORKERS
 fi
